@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import './App.css';
-import { DndContext } from '@dnd-kit/core';
+import { DndContext, DragMoveEvent } from '@dnd-kit/core';
 import type { DragEndEvent } from '@dnd-kit/core';
+import { debounce } from 'radash';
 
 import Draggable from './components/Draggable';
-import { drawLine, drawBezierCurve } from './svgUtils/DrawLine';
+import { drawBezierCurve } from './svgUtils/DrawLine';
 import StartNode from './components/StartNode';
+import { calculateOffsets, getPathEndPoint } from './svgUtils/tools';
 
 function App() {
   const [currentLineId, setCurrentLineId] = useState<string | null>('');
@@ -24,33 +26,45 @@ function App() {
       setCoordinates2(({ x, y }) => ({ x: x + delta.x, y: y + delta.y }));
     }
   }
-
-  function initSvg() {
-    const svg = document.querySelector('svg');
-    const line1 = drawBezierCurve(10, 15, 100, 150);
-    line1.setAttribute('id', 'line1');
-    svg?.appendChild(line1);
-  }
-  useEffect(() => {
-    initSvg();
-  }, []);
-
-  function axisX(x1: number, x2: number) {
-    let result = 0;
-    if (x2 > x1) {
-      result = 10;
-    } else if (x2 < x1) {
-      result = -10;
+  function handleDragMove(event: DragMoveEvent) {
+    const { delta, active } = event;
+    if (active.id === 'draggable-1') {
+      // setCoordinates(({ x, y }) => ({ x: x + delta.x, y: y + delta.y }));
     }
-    return result;
+    console.log('moving: (%s, %s)', event.activatorEvent.clientX, event.activatorEvent.clientY);
+    console.log('corrdinate: (%s, %s)', x, y);
+    updatePath(event);
+    // debouncedUpdatePath(event);
   }
+  const debouncedUpdatePath = debounce({ delay: 100 }, updatePath);
 
-  function getOffset(x1: number, x2: number) {
-    return (x1 - x2) / 10;
-  }
-
-  function getYOffset(y1: number, y2: number) {
-    return (y1 - y2) / 10;
+  function updatePath(event: DragMoveEvent) {
+    console.log('updatePath: ', currentLineId);
+    const id = event.active.id;
+    if (id) {
+      const svg = document.getElementsByTagName('svg')[0];
+      const g = svg.querySelector(`#${id}`);
+      const path = g?.querySelector('path');
+      if (path) {
+        const endPoint = getPathEndPoint(path);
+        // const x2 = event.activatorEvent.clientX;
+        // const y2 = event.activatorEvent.clientY;
+        const x2 = x + event.delta.x + 80;
+        const y2 = y + event.delta.y;
+        console.log('endPoint: (%s, %s)', endPoint.x, endPoint.y);
+        console.log('moving: (%s, %s)', x2, y2);
+        const xoffset = calculateOffsets(endPoint.x, x2);
+        const yoffset = calculateOffsets(endPoint.y, y2);
+        path.setAttribute("d", `M ${x2} ${y2}
+           C ${x2 + 3 * xoffset} ${y2}
+             ${x2 + 4 * xoffset} ${y2 + 3 * yoffset}
+             ${x2 + 5 * xoffset} ${y2 + 5 * yoffset}
+           C ${x2 + 6 * xoffset} ${y2 + 7 * yoffset}
+             ${x2 + 7 * xoffset} ${y2 + 10 * yoffset}
+             ${endPoint.x} ${endPoint.y},
+             `);
+      }
+    }
   }
 
   useEffect(() => {
@@ -60,11 +74,11 @@ function App() {
         const g = svg.querySelector(`#${currentLineId}`);
         const line1 = g?.querySelector('path');
         if (line1) {
-          const { x, y } = (line1 as SVGPathElement).getPointAtLength(10);
+          // const { x, y } = (line1 as SVGPathElement).getPointAtLength(10);
           const x2 = event.clientX;
           const y2 = event.clientY;
-          const xoffset = getOffset(x2, currentLinePosition.x);
-          const yoffset = getYOffset(y2, currentLinePosition.y);
+          const xoffset = calculateOffsets(x2, currentLinePosition.x);
+          const yoffset = calculateOffsets(y2, currentLinePosition.y);
           console.log('起始点: (%s, %s)', currentLinePosition.x, currentLinePosition.y);
           console.log('xoffset', xoffset, 'yoffset', yoffset);
           console.log('终点: (%s, %s)', x2, y2);
@@ -93,7 +107,7 @@ function App() {
   return (
     <div className='relative'>
       <svg className='w-screen h-screen absolute'></svg>
-      <DndContext onDragEnd={handleDragEnd}>
+      <DndContext onDragMove={handleDragMove} onDragEnd={handleDragEnd}>
         <StartNode id="draggable-1" top={y} left={x} activeId={currentLineId} activeLineId={setCurrentLineId} updatePosition={setCurrentLinePosition} >Drag me 1</StartNode>
         {/* <Draggable id="draggable-1" top={y} left={x} activeLineId={setCurrentLineId} updatePosition={setCurrentLinePosition} >Drag me 1</Draggable> */}
         <Draggable id="draggable-2" top={y2} left={x2} activeId={currentLineId} activeLineId={setCurrentLineId} updatePosition={setCurrentLinePosition}>Drag me 2</Draggable>

@@ -31,11 +31,12 @@ function StartNode({ id, top, left, activeId, activeLineId, updatePosition, chil
   }
 
   return (
-    <div ref={setNodeRef} style={{ ...style, top, left }} {...attributes} className="relative">
-      <div className="absolute w-16 h-16 border border-green-600" {...listeners}>
+    <div ref={setNodeRef} style={{ ...style, top, left }} {...attributes}
+      className="relative">
+      <div className="absolute w-24 h-20 border border-green-600" {...listeners}>
         {children}
       </div>
-      <div className="absolute top-[30%] left-16 w-4 h-4 bg-green-300" onClick={handleStart}>a</div>
+      <div className="absolute top-[30%] left-20 w-4 h-4 bg-green-300" onClick={handleStart}>a</div>
     </div>
 
   );
