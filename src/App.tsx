@@ -5,6 +5,7 @@ import type { DragEndEvent } from '@dnd-kit/core';
 
 import Draggable from './components/Draggable';
 import { drawLine, drawBezierCurve } from './svgUtils/DrawLine';
+import StartNode from './components/StartNode';
 
 function App() {
   const [currentLineId, setCurrentLineId] = useState<string | null>('');
@@ -93,8 +94,9 @@ function App() {
     <div className='relative'>
       <svg className='w-screen h-screen absolute'></svg>
       <DndContext onDragEnd={handleDragEnd}>
-        <Draggable id="draggable-1" top={y} left={x} activeLineId={setCurrentLineId} updatePosition={setCurrentLinePosition} >Drag me 1</Draggable>
-        <Draggable id="draggable-2" top={y2} left={x2} activeLineId={setCurrentLineId} updatePosition={setCurrentLinePosition}>Drag me 2</Draggable>
+        <StartNode id="draggable-1" top={y} left={x} activeId={currentLineId} activeLineId={setCurrentLineId} updatePosition={setCurrentLinePosition} >Drag me 1</StartNode>
+        {/* <Draggable id="draggable-1" top={y} left={x} activeLineId={setCurrentLineId} updatePosition={setCurrentLinePosition} >Drag me 1</Draggable> */}
+        <Draggable id="draggable-2" top={y2} left={x2} activeId={currentLineId} activeLineId={setCurrentLineId} updatePosition={setCurrentLinePosition}>Drag me 2</Draggable>
       </DndContext>
     </div>
   );
