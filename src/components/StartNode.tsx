@@ -8,10 +8,11 @@ type Props = PropsWithChildren<{
   left: number;
   activeId: string | null;
   activeLineId: (id: string) => void;
-  updatePosition: ({ x, y }: { x: number, y: number; }) => void;
+  updatePosition?: ({ x, y }: { x: number, y: number; }) => void;
+  updateComponentPosition: (id: string, position: { x: number; y: number; }) => void;
 }>;
 
-function StartNode({ id, top, left, activeId, activeLineId, updatePosition, children }: Props) {
+function StartNode({ id, top, left, activeId, activeLineId, updatePosition, updateComponentPosition, children }: Props) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: id,
   });
@@ -26,7 +27,8 @@ function StartNode({ id, top, left, activeId, activeLineId, updatePosition, chil
     event.preventDefault();
     console.log('handle start: ', event);
     activeLineId(id);
-    updatePosition({ x: event.clientX, y: event.clientY });
+    // updatePosition({ x: event.clientX, y: event.clientY });
+    updateComponentPosition(id, { x: event.clientX, y: event.clientY });
     return null;
   }
 
