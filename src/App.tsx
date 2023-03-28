@@ -75,10 +75,11 @@ const useStore = create<State & Action>((set, get) => ({
 }));
 
 function App() {
-  const { components, addComponent, updateComponentPosition } = useStore((state) => ({
+  const { components, addComponent, updateComponentPosition, getComponentById } = useStore((state) => ({
     components: state.components,
     addComponent: state.addComponent,
     updateComponentPosition: state.updateComponentPosition,
+    getComponentById: state.getComponentById
   }));
   const [currentLineId, setCurrentLineId] = useState<string | null>('');
   const [currentLinePosition, setCurrentLinePosition] = useState({ x: 0, y: 0 });
@@ -144,28 +145,31 @@ function App() {
       console.log('currentLineId: ', currentLineId);
       if (currentLineId) {
         const svg = document.getElementsByTagName('svg')[0];
-        const g = svg.querySelector(`#${currentLineId}`);
+        const g = svg?.querySelector(`#${currentLineId}`);
         const line1 = g?.querySelector('path');
         if (line1) {
           // const { x, y } = (line1 as SVGPathElement).getPointAtLength(10);
           const x2 = event.clientX;
           const y2 = event.clientY;
-          const xoffset = calculateOffsets(x2, currentLinePosition.x);
-          const yoffset = calculateOffsets(y2, currentLinePosition.y);
+          const position = getComponentById(currentLineId)?.position;
+          const xoffset = calculateOffsets(x2, position!.x);
+          const yoffset = calculateOffsets(y2, position!.y);
           console.log('起始点: (%s, %s)', currentLinePosition.x, currentLinePosition.y);
           console.log('xoffset', xoffset, 'yoffset', yoffset);
           console.log('终点: (%s, %s)', x2, y2);
-          line1.setAttribute("d", `M ${currentLinePosition.x} ${currentLinePosition.y}
-           C ${currentLinePosition.x + 3 * xoffset} ${currentLinePosition.y}
-             ${currentLinePosition.x + 4 * xoffset} ${currentLinePosition.y + 3 * yoffset}
-             ${currentLinePosition.x + 5 * xoffset} ${currentLinePosition.y + 5 * yoffset}
-           C ${currentLinePosition.x + 6 * xoffset} ${currentLinePosition.y + 7 * yoffset}
-             ${currentLinePosition.x + 7 * xoffset} ${currentLinePosition.y + 10 * yoffset}
+          line1.setAttribute("d", `M ${position!.x} ${position!.y}
+           C ${position!.x + 3 * xoffset} ${position!.y}
+             ${position!.x + 4 * xoffset} ${position!.y + 3 * yoffset}
+             ${position!.x + 5 * xoffset} ${position!.y + 5 * yoffset}
+           C ${position!.x + 6 * xoffset} ${position!.y + 7 * yoffset}
+             ${position!.x + 7 * xoffset} ${position!.y + 10 * yoffset}
              ${x2} ${y2},
              `);
         } else {
+          const position = getComponentById(currentLineId)?.position;
+          console.log('position', position);
           const svg = document.querySelector('svg');
-          const line1 = drawBezierCurve(currentLinePosition.x, currentLinePosition.y, event.clientX, event.clientY);
+          const line1 = drawBezierCurve(position!.x, position!.y, event.clientX, event.clientY);
           line1.setAttribute('id', currentLineId);
           svg?.appendChild(line1);
         }
@@ -175,12 +179,12 @@ function App() {
     return () => {
       window.removeEventListener('mousemove', mouseMove);
     };
-  }, []);
+  }, [currentLineId]);
 
   const handleAddClick = (type: 'START' | 'NORMAL') => {
     const id = uuidv4();
     console.log('id', id);
-    addComponent(id, {
+    addComponent(type + id, {
       id,
       type,
       position: { x: 0, y: 0 },
@@ -196,13 +200,13 @@ function App() {
         {Object.values(components).map((component) => {
           switch (component.type) {
             case 'START': {
-              return <StartNode id={component.id} top={component.position.y} left={component.position.x} key={component.id}
+              return <StartNode id={component.type + component.id} top={component.position.y} left={component.position.x} key={component.id}
                 activeId={currentLineId} activeLineId={setCurrentLineId} updateComponentPosition={updateComponentPosition}>
                 {component.id}
               </StartNode>;
             }
             case 'NORMAL': {
-              return <Draggable id={component.id} top={component.position.y} left={component.position.x} key={component.id}
+              return <Draggable id={component.type + component.id} top={component.position.y} left={component.position.x} key={component.id}
                 activeId={currentLineId} activeLineId={setCurrentLineId} updateComponentPosition={updateComponentPosition}>
                 {component.id}
               </Draggable>;

@@ -28,7 +28,7 @@ function StartNode({ id, top, left, activeId, activeLineId, updatePosition, upda
     console.log('handle start: ', event);
     activeLineId(id);
     // updatePosition({ x: event.clientX, y: event.clientY });
-    updateComponentPosition(id, { x: event.clientX, y: event.clientY });
+    // updateComponentPosition(id, { x: event.clientX, y: event.clientY });
     return null;
   }
 
